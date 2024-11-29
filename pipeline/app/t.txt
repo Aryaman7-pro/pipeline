@@ -1,0 +1,71 @@
+async def generate_abstraction_phrase(paraphrases):
+    try:
+ 
+        few_shot_examples = [
+ 
+        {
+        "input" : ''' "Best summary" : "Breast density assessment software",
+        "Paraphrased_1" : "Software for evaluating breast tissue density",
+        "Paraphrased_2" : "Breast tissue composition analysis software",
+        "Paraphrased_3" : "Digital breast density categorization software" ''',
+ 
+        "output" : "Automated Radiological Image Processing Software"
+ 
+ 
+        },
+ 
+        {"input": ''' "Best summary" : "Wearable infusion pump for subcutaneous delivery of medication for PAH",
+        "Paraphrased_1" : "Portable pump system for administering subcutaneous PAH medication",
+        "Paraphrased_2" : "Wearable pump designed for subcutaneous infusion of PAH treatment",
+        "Paraphrased_3" : "Subcutaneous drug delivery device for PAH medication"''',
+ 
+        "output" : "Wearable Infusion Pump, Drug Specific"
+        },
+ 
+        {
+        "input": ''' "Best summary" : "Insulin pump and software update system",
+        "Paraphrased_1" : "Insulin delivery device and associated software updating system",
+        "Paraphrased_2" : "System for subcutaneous insulin administration and software maintenance",
+        "Paraphrased_3" : "Diabetes management insulin pump and software updater" ''',
+ 
+        "output": "Pump, Infusion, Insulin"
+        },
+ 
+        {
+        "input": ''' "Best summary" : "Contrast media delivery system for radiographic imaging procedures",
+        "Paraphrased_1" : "System for controlled delivery of contrast media in imaging procedures",
+        "Paraphrased_2" : "Device for administering contrast media during radiographic interventions",
+        "Paraphrased_3" : "Imaging procedure equipment for precise contrast media infusion"''',
+ 
+        "output": "Injector And Syringe, Angiographic"
+        }                    
+        ]
+ 
+        example_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("human", "{input}"),
+            ("ai", "{output}"),
+        ]
+        )
+ 
+        few_shot_prompt = FewShotChatMessagePromptTemplate(
+            example_prompt=example_prompt,
+            examples=few_shot_examples,
+            input_variables=["input"]
+        )
+ 
+        final_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", ''' You are an expert medical device assistant. Your task is to find a higher level abstraction for a short description of a medical device. You will be given 3 possible descriptions of a device in JSON format and you will produce a more general, terse abstraction of the device description. '''),
+            few_shot_prompt,
+            ("human", "{input}"),
+        ]
+        )
+ 
+        chain = final_prompt | llm
+        results = await chain.ainvoke(json.dumps(paraphrases))
+        abstract_phrase = results.content
+        return abstract_phrase
+    except Exception as e:
+        logger.error(f"An error occured {str(e)}")
+        raise
